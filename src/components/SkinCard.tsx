@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Skin, RARITY_COLORS } from "@/types";
 
 interface SkinCardProps {
@@ -16,6 +17,8 @@ export default function SkinCard({
   size = "md",
 }: SkinCardProps) {
   const rarityColor = RARITY_COLORS[skin.rarity];
+  const [imgError, setImgError] = useState(false);
+  const [imgLoaded, setImgLoaded] = useState(false);
 
   const sizeClasses = {
     sm: "w-32 p-2",
@@ -35,7 +38,7 @@ export default function SkinCard({
       className={`
         ${sizeClasses[size]}
         rounded-xl bg-[#1e1e3a] border-2 transition-all duration-200
-        hover:scale-105 hover:shadow-lg hover:shadow-[${rarityColor}]/20
+        hover:scale-105 hover:shadow-lg
         flex flex-col items-center gap-2 group relative overflow-hidden
         ${selected ? "border-orange-400 shadow-lg shadow-orange-400/20" : "border-[#2a2a4a] hover:border-[#3a3a5a]"}
       `}
@@ -48,13 +51,39 @@ export default function SkinCard({
         style={{ backgroundColor: rarityColor }}
       />
 
-      <div className={`${imgSizes[size]} flex items-center justify-center`}>
-        <img
-          src={skin.image}
-          alt={`${skin.weapon} | ${skin.name}`}
-          className="max-h-full max-w-full object-contain drop-shadow-lg group-hover:drop-shadow-2xl transition-all"
-          loading="lazy"
-        />
+      <div className={`${imgSizes[size]} flex items-center justify-center relative w-full`}>
+        {!imgLoaded && !imgError && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div
+              className="w-full h-full rounded-lg animate-pulse"
+              style={{
+                background: `linear-gradient(135deg, ${rarityColor}15, ${rarityColor}08)`,
+              }}
+            />
+          </div>
+        )}
+        {imgError ? (
+          <div
+            className="w-full h-full rounded-lg flex flex-col items-center justify-center"
+            style={{
+              background: `linear-gradient(135deg, ${rarityColor}20, ${rarityColor}08)`,
+            }}
+          >
+            <svg className="w-8 h-8 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <span className="text-[10px] text-gray-500 mt-1">{skin.weapon}</span>
+          </div>
+        ) : (
+          <img
+            src={skin.image}
+            alt={`${skin.weapon} | ${skin.name}`}
+            className={`max-h-full max-w-full object-contain drop-shadow-lg group-hover:drop-shadow-2xl transition-all ${imgLoaded ? "opacity-100" : "opacity-0"}`}
+            loading="lazy"
+            onLoad={() => setImgLoaded(true)}
+            onError={() => setImgError(true)}
+          />
+        )}
       </div>
 
       <div className="text-center w-full">
