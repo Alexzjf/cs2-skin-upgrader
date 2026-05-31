@@ -70,25 +70,25 @@ export default function SkinSelector({
   }, [skins, search, selectedRarity, sortBy, filterMinPrice, filterMaxPrice]);
 
   return (
-    <div className="bg-[#12122a] rounded-2xl border border-[#2a2a4a] p-4">
-      <h3 className="text-lg font-bold text-white mb-3">{label}</h3>
+    <div className="bg-[#111827] rounded-xl border border-[#1f2937] p-4">
+      <h3 className="text-sm font-bold text-white mb-3 uppercase tracking-wide">{label}</h3>
 
       <div className="flex flex-wrap gap-2 mb-3">
         <input
           type="text"
-          placeholder="Search skins..."
+          placeholder="Search..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="flex-1 min-w-[200px] bg-[#0f0f23] border border-[#2a2a4a] rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-orange-400"
+          className="flex-1 min-w-[140px] bg-[#0b0f19] border border-[#1f2937] rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-orange-500/50"
         />
         <select
           value={selectedRarity}
           onChange={(e) =>
             setSelectedRarity(e.target.value as SkinRarity | "all")
           }
-          className="bg-[#0f0f23] border border-[#2a2a4a] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-orange-400"
+          className="bg-[#0b0f19] border border-[#1f2937] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-orange-500/50"
         >
-          <option value="all">All Rarities</option>
+          <option value="all">All</option>
           {RARITIES.map((r) => (
             <option key={r} value={r}>
               {r}
@@ -100,14 +100,14 @@ export default function SkinSelector({
           onChange={(e) =>
             setSortBy(e.target.value as "price-asc" | "price-desc")
           }
-          className="bg-[#0f0f23] border border-[#2a2a4a] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-orange-400"
+          className="bg-[#0b0f19] border border-[#1f2937] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-orange-500/50"
         >
-          <option value="price-asc">Price: Low to High</option>
-          <option value="price-desc">Price: High to Low</option>
+          <option value="price-asc">Price ↑</option>
+          <option value="price-desc">Price ↓</option>
         </select>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 max-h-[400px] overflow-y-auto pr-1 scrollbar-thin">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 max-h-[350px] overflow-y-auto pr-1 scrollbar-thin">
         {filteredSkins.map((skin) => (
           <SkinCard
             key={skin.id}
@@ -118,7 +118,7 @@ export default function SkinSelector({
           />
         ))}
         {filteredSkins.length === 0 && (
-          <div className="col-span-full text-center text-gray-500 py-8">
+          <div className="col-span-full text-center text-gray-600 py-8 text-sm">
             No skins found
           </div>
         )}

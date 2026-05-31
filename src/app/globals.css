@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: #0a0a1a;
-  --foreground: #ededed;
+  --background: #0b0f19;
+  --foreground: #e5e7eb;
 }
 
 @theme inline {
@@ -19,8 +19,8 @@ body {
 
 /* Custom scrollbar */
 .scrollbar-thin::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 
 .scrollbar-thin::-webkit-scrollbar-track {
@@ -28,33 +28,19 @@ body {
 }
 
 .scrollbar-thin::-webkit-scrollbar-thumb {
-  background: #2a2a4a;
+  background: #1f2937;
   border-radius: 3px;
 }
 
 .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-  background: #3a3a5a;
+  background: #374151;
 }
 
 /* Animations */
-@keyframes pulse-glow {
-  0%,
-  100% {
-    box-shadow: 0 0 20px rgba(251, 146, 60, 0.3);
-  }
-  50% {
-    box-shadow: 0 0 40px rgba(251, 146, 60, 0.6);
-  }
-}
-
-.animate-pulse-glow {
-  animation: pulse-glow 2s infinite;
-}
-
 @keyframes slide-up {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(10px);
   }
   to {
     opacity: 1;
@@ -63,5 +49,5 @@ body {
 }
 
 .animate-slide-up {
-  animation: slide-up 0.3s ease-out;
+  animation: slide-up 0.25s ease-out;
 }
