@@ -87,7 +87,7 @@ export default function UpgradeGame() {
       {/* Balance Bar */}
       <div className="flex items-center justify-between bg-[#111827] rounded-lg border border-[#1f2937] px-5 py-3">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-lg flex items-center justify-center">
+          <div className="w-9 h-9 bg-gradient-to-br from-emerald-500 to-green-400 rounded-lg flex items-center justify-center">
             <span className="text-sm font-bold text-black">$</span>
           </div>
           <div>
@@ -176,7 +176,7 @@ export default function UpgradeGame() {
                   ${
                     !betSkin || !targetSkin || isSpinning
                       ? "bg-[#1f2937] text-gray-500 cursor-not-allowed border border-[#374151]"
-                      : "bg-gradient-to-r from-orange-500 to-yellow-500 text-black hover:from-orange-400 hover:to-yellow-400 shadow-lg shadow-orange-500/20 active:scale-95"
+                      : "bg-gradient-to-r from-emerald-500 to-green-400 text-black hover:from-emerald-400 hover:to-green-300 shadow-lg shadow-emerald-500/20 active:scale-95"
                   }
                 `}
               >

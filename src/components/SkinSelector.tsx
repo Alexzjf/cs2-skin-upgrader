@@ -79,14 +79,14 @@ export default function SkinSelector({
           placeholder="Search..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="flex-1 min-w-[140px] bg-[#0b0f19] border border-[#1f2937] rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-orange-500/50"
+          className="flex-1 min-w-[140px] bg-[#0b0f19] border border-[#1f2937] rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-emerald-500/50"
         />
         <select
           value={selectedRarity}
           onChange={(e) =>
             setSelectedRarity(e.target.value as SkinRarity | "all")
           }
-          className="bg-[#0b0f19] border border-[#1f2937] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-orange-500/50"
+          className="bg-[#0b0f19] border border-[#1f2937] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500/50"
         >
           <option value="all">All</option>
           {RARITIES.map((r) => (
@@ -100,7 +100,7 @@ export default function SkinSelector({
           onChange={(e) =>
             setSortBy(e.target.value as "price-asc" | "price-desc")
           }
-          className="bg-[#0b0f19] border border-[#1f2937] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-orange-500/50"
+          className="bg-[#0b0f19] border border-[#1f2937] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500/50"
         >
           <option value="price-asc">Price ↑</option>
           <option value="price-desc">Price ↓</option>

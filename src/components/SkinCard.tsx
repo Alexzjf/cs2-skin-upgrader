@@ -40,7 +40,7 @@ export default function SkinCard({
         rounded-lg bg-[#1a2332] border transition-all duration-150
         hover:bg-[#1f2d3d] hover:scale-[1.02]
         flex flex-col items-center gap-1.5 group relative overflow-hidden
-        ${selected ? "border-orange-400 ring-1 ring-orange-400/30" : "border-[#1f2937] hover:border-[#374151]"}
+        ${selected ? "border-emerald-400 ring-1 ring-emerald-400/30" : "border-[#1f2937] hover:border-[#374151]"}
       `}
     >
       <div

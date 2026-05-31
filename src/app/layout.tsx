@@ -33,7 +33,7 @@ export default function RootLayout({
         <header className="bg-[#111827]/90 backdrop-blur-md border-b border-[#1f2937] sticky top-0 z-50">
           <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
             <Link href="/" className="flex items-center gap-2">
-              <div className="w-7 h-7 bg-gradient-to-br from-orange-500 to-yellow-400 rounded flex items-center justify-center font-bold text-[11px] text-black">
+              <div className="w-7 h-7 bg-gradient-to-br from-emerald-500 to-green-400 rounded flex items-center justify-center font-bold text-[11px] text-black">
                 CS2
               </div>
               <span className="text-lg font-bold text-white">
