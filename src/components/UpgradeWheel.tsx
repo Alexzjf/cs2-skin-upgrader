@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useMemo, useCallback } from "react";
+import { useEffect, useRef, useCallback } from "react";
 
 interface UpgradeWheelProps {
   chance: number;
@@ -9,29 +9,12 @@ interface UpgradeWheelProps {
   onSpinComplete?: () => void;
 }
 
-const SEGMENT_WIDTH = 48;
-const SEGMENT_HEIGHT = 80;
-const TOTAL_SEGMENTS = 120;
-const SPIN_DURATION = 4000;
-const STRIP_WIDTH = TOTAL_SEGMENTS * SEGMENT_WIDTH;
+const SIZE = 280;
+const SPIN_DURATION = 3500;
+const FULL_SPINS = 5;
 
-function easeOutCubic(t: number): number {
-  return 1 - Math.pow(1 - t, 3);
-}
-
-function generateSegments(chancePercent: number, seed: number): boolean[] {
-  const segments: boolean[] = [];
-  for (let i = 0; i < TOTAL_SEGMENTS; i++) {
-    const pos = (i / TOTAL_SEGMENTS) * 100;
-    segments.push(pos < chancePercent);
-  }
-  let s = seed;
-  for (let i = segments.length - 1; i > 0; i--) {
-    s = (s * 1664525 + 1013904223) & 0x7fffffff;
-    const j = s % (i + 1);
-    [segments[i], segments[j]] = [segments[j], segments[i]];
-  }
-  return segments;
+function easeOutQuart(t: number): number {
+  return 1 - Math.pow(1 - t, 4);
 }
 
 export default function UpgradeWheel({
@@ -40,54 +23,167 @@ export default function UpgradeWheel({
   result,
   onSpinComplete,
 }: UpgradeWheelProps) {
-  const stripRef = useRef<HTMLDivElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const animFrameRef = useRef<number>(0);
   const spinCompleteCalledRef = useRef(false);
   const startTimeRef = useRef(0);
-  const targetOffsetRef = useRef(0);
+  const targetAngleRef = useRef(0);
+  const currentAngleRef = useRef(0);
 
   const stableOnSpinComplete = useCallback(() => {
     onSpinComplete?.();
   }, [onSpinComplete]);
 
-  const segments = useMemo(() => {
-    const seed = Math.floor(chance * 1000) + (result ? (result.won ? 7 : 13) : 0);
-    const segs = generateSegments(chance, seed);
-    if (isSpinning && result) {
-      const centerIndex = Math.floor(TOTAL_SEGMENTS / 2);
-      segs[centerIndex] = result.won;
-      if (centerIndex > 0) segs[centerIndex - 1] = !result.won;
-      if (centerIndex < TOTAL_SEGMENTS - 1) segs[centerIndex + 1] = !result.won;
-    }
-    return segs;
-  }, [chance, isSpinning, result]);
+  // Draw the gauge
+  const draw = useCallback(
+    (pointerAngle: number) => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
 
-  // Drive animation via DOM ref
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = SIZE * dpr;
+      canvas.height = SIZE * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, SIZE, SIZE);
+
+      const cx = SIZE / 2;
+      const cy = SIZE / 2;
+      const outerR = SIZE / 2 - 16;
+      const innerR = outerR - 32;
+      const chanceRad = (chance / 100) * Math.PI * 2;
+
+      // Win zone (green) - starts from top (-PI/2)
+      const startAngle = -Math.PI / 2;
+      ctx.beginPath();
+      ctx.arc(cx, cy, outerR, startAngle, startAngle + chanceRad);
+      ctx.arc(cx, cy, innerR, startAngle + chanceRad, startAngle, true);
+      ctx.closePath();
+      ctx.fillStyle = "#16a34a";
+      ctx.fill();
+
+      // Lose zone (red)
+      ctx.beginPath();
+      ctx.arc(cx, cy, outerR, startAngle + chanceRad, startAngle + Math.PI * 2);
+      ctx.arc(cx, cy, innerR, startAngle + Math.PI * 2, startAngle + chanceRad, true);
+      ctx.closePath();
+      ctx.fillStyle = "#dc2626";
+      ctx.fill();
+
+      // Zone border lines
+      ctx.strokeStyle = "#0b0f19";
+      ctx.lineWidth = 2;
+      // Border at 0 (top)
+      ctx.beginPath();
+      ctx.moveTo(cx + Math.cos(startAngle) * innerR, cy + Math.sin(startAngle) * innerR);
+      ctx.lineTo(cx + Math.cos(startAngle) * outerR, cy + Math.sin(startAngle) * outerR);
+      ctx.stroke();
+      // Border at chance angle
+      const borderAngle = startAngle + chanceRad;
+      ctx.beginPath();
+      ctx.moveTo(cx + Math.cos(borderAngle) * innerR, cy + Math.sin(borderAngle) * innerR);
+      ctx.lineTo(cx + Math.cos(borderAngle) * outerR, cy + Math.sin(borderAngle) * outerR);
+      ctx.stroke();
+
+      // Outer ring
+      ctx.beginPath();
+      ctx.arc(cx, cy, outerR, 0, Math.PI * 2);
+      ctx.strokeStyle = "#374151";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Inner ring
+      ctx.beginPath();
+      ctx.arc(cx, cy, innerR, 0, Math.PI * 2);
+      ctx.strokeStyle = "#374151";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Center circle (dark)
+      ctx.beginPath();
+      ctx.arc(cx, cy, innerR - 2, 0, Math.PI * 2);
+      ctx.fillStyle = "#111827";
+      ctx.fill();
+      ctx.strokeStyle = "#1f2937";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Chance text in center
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "bold 28px system-ui, -apple-system, sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(`${chance.toFixed(1)}%`, cx, cy - 8);
+
+      ctx.fillStyle = "#9ca3af";
+      ctx.font = "12px system-ui, -apple-system, sans-serif";
+      ctx.fillText("CHANCE", cx, cy + 16);
+
+      // Pointer/needle
+      const needleAngle = startAngle + pointerAngle;
+      const needleLength = outerR + 8;
+      const needleBase = 20;
+
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(needleAngle + Math.PI / 2);
+
+      // Needle shape
+      ctx.beginPath();
+      ctx.moveTo(0, -needleLength + 10);
+      ctx.lineTo(-5, -needleBase);
+      ctx.lineTo(-2, 0);
+      ctx.lineTo(2, 0);
+      ctx.lineTo(5, -needleBase);
+      ctx.closePath();
+      ctx.fillStyle = "#fbbf24";
+      ctx.fill();
+      ctx.strokeStyle = "#f59e0b";
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      // Needle center dot
+      ctx.beginPath();
+      ctx.arc(0, 0, 6, 0, Math.PI * 2);
+      ctx.fillStyle = "#fbbf24";
+      ctx.fill();
+      ctx.strokeStyle = "#f59e0b";
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      ctx.restore();
+    },
+    [chance]
+  );
+
+  // Initial draw
   useEffect(() => {
-    if (!isSpinning || !result) {
-      // Reset position when idle
-      if (stripRef.current) {
-        stripRef.current.style.transform = `translateX(calc(50% - ${SEGMENT_WIDTH / 2}px))`;
-      }
-      return;
-    }
+    draw(0);
+  }, [draw]);
+
+  // Spin animation
+  useEffect(() => {
+    if (!isSpinning || !result) return;
 
     spinCompleteCalledRef.current = false;
-
-    const baseScroll = STRIP_WIDTH * 0.6;
-    const extraScroll = Math.random() * STRIP_WIDTH * 0.2;
-    targetOffsetRef.current = baseScroll + extraScroll;
     startTimeRef.current = performance.now();
+
+    // Target: roll determines where the pointer lands
+    // roll is 0-100. If roll < chance → win (lands in green zone)
+    // Green zone is from angle 0 to chanceRad
+    const rollAngle = (result.roll / 100) * Math.PI * 2;
+    const totalRotation = FULL_SPINS * Math.PI * 2 + rollAngle;
+    targetAngleRef.current = totalRotation;
 
     const animate = (now: number) => {
       const elapsed = now - startTimeRef.current;
       const progress = Math.min(elapsed / SPIN_DURATION, 1);
-      const eased = easeOutCubic(progress);
-      const currentOffset = targetOffsetRef.current * eased;
+      const eased = easeOutQuart(progress);
+      const currentAngle = targetAngleRef.current * eased;
+      currentAngleRef.current = currentAngle;
 
-      if (stripRef.current) {
-        stripRef.current.style.transform = `translateX(calc(50% - ${SEGMENT_WIDTH / 2}px - ${currentOffset}px))`;
-      }
+      draw(currentAngle);
 
       if (progress < 1) {
         animFrameRef.current = requestAnimationFrame(animate);
@@ -106,82 +202,15 @@ export default function UpgradeWheel({
         cancelAnimationFrame(animFrameRef.current);
       }
     };
-  }, [isSpinning, result, stableOnSpinComplete]);
+  }, [isSpinning, result, draw, stableOnSpinComplete]);
 
   return (
-    <div className="flex flex-col items-center gap-4 w-full">
-      {/* Roulette container */}
-      <div className="relative w-full max-w-[720px]">
-        {/* Pointer (top center) */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1 z-20">
-          <div className="w-0 h-0 border-l-[10px] border-r-[10px] border-t-[14px] border-l-transparent border-r-transparent border-t-yellow-400 drop-shadow-lg" />
-        </div>
-
-        {/* Bottom pointer */}
-        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1 z-20">
-          <div className="w-0 h-0 border-l-[10px] border-r-[10px] border-b-[14px] border-l-transparent border-r-transparent border-b-yellow-400 drop-shadow-lg" />
-        </div>
-
-        {/* Center line */}
-        <div className="absolute top-0 bottom-0 left-1/2 -translate-x-[1px] w-[2px] bg-yellow-400/80 z-10 pointer-events-none" />
-
-        {/* Track */}
-        <div
-          className="overflow-hidden rounded-xl border-2 border-[#1f2937] bg-[#0a0e17] relative"
-          style={{ height: SEGMENT_HEIGHT + 8 }}
-        >
-          {/* Gradient edges */}
-          <div className="absolute inset-y-0 left-0 w-16 bg-gradient-to-r from-[#0a0e17] to-transparent z-10 pointer-events-none rounded-l-xl" />
-          <div className="absolute inset-y-0 right-0 w-16 bg-gradient-to-l from-[#0a0e17] to-transparent z-10 pointer-events-none rounded-r-xl" />
-
-          {/* Sliding strip */}
-          <div
-            ref={stripRef}
-            className="flex items-center h-full will-change-transform"
-            style={{
-              transform: `translateX(calc(50% - ${SEGMENT_WIDTH / 2}px))`,
-              width: STRIP_WIDTH,
-            }}
-          >
-            {segments.map((isWin, i) => (
-              <div
-                key={i}
-                className="flex-shrink-0 flex items-center justify-center border-r border-[#0f1520]"
-                style={{
-                  width: SEGMENT_WIDTH,
-                  height: SEGMENT_HEIGHT,
-                  background: isWin
-                    ? "linear-gradient(180deg, #166534 0%, #14532d 100%)"
-                    : "linear-gradient(180deg, #991b1b 0%, #7f1d1d 100%)",
-                }}
-              >
-                <span
-                  className={`text-xs font-bold opacity-50 ${
-                    isWin ? "text-green-300" : "text-red-300"
-                  }`}
-                >
-                  {isWin ? "W" : "L"}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Chance legend */}
-      <div className="flex items-center gap-3">
-        <div className="flex items-center gap-1.5">
-          <div className="w-3 h-3 rounded-sm bg-green-700" />
-          <span className="text-[11px] text-gray-500">WIN</span>
-        </div>
-        <span className="text-base font-bold text-white">
-          {chance > 0 ? `${chance.toFixed(2)}%` : "—"}
-        </span>
-        <div className="flex items-center gap-1.5">
-          <div className="w-3 h-3 rounded-sm bg-red-800" />
-          <span className="text-[11px] text-gray-500">LOSE</span>
-        </div>
-      </div>
+    <div className="flex flex-col items-center">
+      <canvas
+        ref={canvasRef}
+        style={{ width: SIZE, height: SIZE }}
+        className="drop-shadow-lg"
+      />
     </div>
   );
 }

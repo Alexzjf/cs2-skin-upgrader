@@ -103,16 +103,15 @@ export default function UpgradeGame() {
         </button>
       </div>
 
-      {/* Upgrade Area */}
-      <div className="bg-[#111827] rounded-xl border border-[#1f2937] p-5">
-        {/* Skin cards row: Bet → Arrow → Target */}
-        <div className="flex items-center justify-center gap-4 mb-6">
+      {/* Main Upgrade Area: [Bet Skin] — [Wheel] — [Target Skin] */}
+      <div className="bg-[#111827] rounded-xl border border-[#1f2937] p-6">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto_1fr] gap-6 items-center">
           {/* Bet skin */}
-          <div className="flex flex-col items-center gap-2 min-w-[160px]">
+          <div className="flex flex-col items-center gap-3">
             <span className="text-[11px] uppercase tracking-wider text-gray-500">Your Skin</span>
             {betSkin ? (
               <div className="flex flex-col items-center gap-2">
-                <SkinCard skin={betSkin} selected size="md" />
+                <SkinCard skin={betSkin} selected size="lg" />
                 <button
                   onClick={() => setBetSkin(null)}
                   className="text-[11px] text-gray-500 hover:text-red-400 transition-colors"
@@ -121,30 +120,87 @@ export default function UpgradeGame() {
                 </button>
               </div>
             ) : (
-              <div className="w-36 h-36 rounded-xl border-2 border-dashed border-[#2a3441] flex items-center justify-center text-gray-600">
-                <span className="text-xs text-center px-2">Select a skin below</span>
+              <div className="w-44 h-44 rounded-xl border-2 border-dashed border-[#2a3441] flex items-center justify-center text-gray-600">
+                <span className="text-xs text-center px-3">Select a skin to bet</span>
               </div>
             )}
           </div>
 
-          {/* Arrow + Chance */}
-          <div className="flex flex-col items-center gap-2 px-4">
-            <div className="w-12 h-12 rounded-full bg-[#1f2937] border border-[#374151] flex items-center justify-center">
-              <svg className="w-5 h-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-              </svg>
-            </div>
-            <span className="text-sm font-bold text-yellow-400">
-              {chance > 0 ? `${chance.toFixed(2)}%` : "—"}
-            </span>
+          {/* Center: Wheel + Button */}
+          <div className="flex flex-col items-center gap-4">
+            <UpgradeWheel
+              chance={chance}
+              isSpinning={isSpinning}
+              result={result ? { won: result.won, roll: result.roll } : null}
+              onSpinComplete={handleSpinComplete}
+            />
+
+            {showResult && result ? (
+              <div className="flex flex-col items-center gap-3">
+                <div
+                  className={`rounded-lg border px-5 py-2.5 text-center ${
+                    result.won
+                      ? "border-green-500/50 bg-green-500/10"
+                      : "border-red-500/50 bg-red-500/10"
+                  }`}
+                >
+                  <p
+                    className={`text-xl font-black ${
+                      result.won ? "text-green-400" : "text-red-400"
+                    }`}
+                  >
+                    {result.won ? "WIN!" : "LOSE"}
+                  </p>
+                  <p className="text-[11px] text-gray-400 mt-0.5">
+                    Roll: {result.roll.toFixed(2)}
+                  </p>
+                  {result.won && (
+                    <p className="text-sm text-green-300 font-medium">
+                      +${result.targetSkin.price.toFixed(2)}
+                    </p>
+                  )}
+                </div>
+                <button
+                  onClick={handleReset}
+                  className="px-5 py-2 rounded-lg font-semibold text-sm bg-[#1f2937] hover:bg-[#374151] text-white transition-all border border-[#374151]"
+                >
+                  Play Again
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={handleUpgrade}
+                disabled={!betSkin || !targetSkin || isSpinning}
+                className={`
+                  px-8 py-3 rounded-lg font-bold text-base transition-all
+                  ${
+                    !betSkin || !targetSkin || isSpinning
+                      ? "bg-[#1f2937] text-gray-500 cursor-not-allowed border border-[#374151]"
+                      : "bg-gradient-to-r from-orange-500 to-yellow-500 text-black hover:from-orange-400 hover:to-yellow-400 shadow-lg shadow-orange-500/20 active:scale-95"
+                  }
+                `}
+              >
+                {isSpinning ? (
+                  <span className="flex items-center gap-2">
+                    <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                    Upgrading...
+                  </span>
+                ) : (
+                  "UPGRADE"
+                )}
+              </button>
+            )}
           </div>
 
           {/* Target skin */}
-          <div className="flex flex-col items-center gap-2 min-w-[160px]">
+          <div className="flex flex-col items-center gap-3">
             <span className="text-[11px] uppercase tracking-wider text-gray-500">Target</span>
             {targetSkin ? (
               <div className="flex flex-col items-center gap-2">
-                <SkinCard skin={targetSkin} selected size="md" />
+                <SkinCard skin={targetSkin} selected size="lg" />
                 <button
                   onClick={() => setTargetSkin(null)}
                   className="text-[11px] text-gray-500 hover:text-red-400 transition-colors"
@@ -153,81 +209,11 @@ export default function UpgradeGame() {
                 </button>
               </div>
             ) : (
-              <div className="w-36 h-36 rounded-xl border-2 border-dashed border-[#2a3441] flex items-center justify-center text-gray-600">
-                <span className="text-xs text-center px-2">Select target below</span>
+              <div className="w-44 h-44 rounded-xl border-2 border-dashed border-[#2a3441] flex items-center justify-center text-gray-600">
+                <span className="text-xs text-center px-3">Select target skin</span>
               </div>
             )}
           </div>
-        </div>
-
-        {/* Roulette */}
-        <UpgradeWheel
-          chance={chance}
-          isSpinning={isSpinning}
-          result={result ? { won: result.won, roll: result.roll } : null}
-          onSpinComplete={handleSpinComplete}
-        />
-
-        {/* Upgrade button + Result */}
-        <div className="flex flex-col items-center gap-4 mt-5">
-          {showResult && result ? (
-            <div className="flex flex-col items-center gap-3">
-              <div
-                className={`rounded-lg border px-6 py-3 text-center ${
-                  result.won
-                    ? "border-green-500/50 bg-green-500/10"
-                    : "border-red-500/50 bg-red-500/10"
-                }`}
-              >
-                <p
-                  className={`text-2xl font-black ${
-                    result.won ? "text-green-400" : "text-red-400"
-                  }`}
-                >
-                  {result.won ? "YOU WON!" : "YOU LOST"}
-                </p>
-                <p className="text-xs text-gray-400 mt-1">
-                  Roll: {result.roll.toFixed(2)} | Chance: {result.chance.toFixed(2)}%
-                </p>
-                {result.won && (
-                  <p className="text-sm text-green-300 mt-1 font-medium">
-                    +${result.targetSkin.price.toFixed(2)}
-                  </p>
-                )}
-              </div>
-              <button
-                onClick={handleReset}
-                className="px-6 py-2.5 rounded-lg font-semibold text-sm bg-[#1f2937] hover:bg-[#374151] text-white transition-all border border-[#374151]"
-              >
-                Play Again
-              </button>
-            </div>
-          ) : (
-            <button
-              onClick={handleUpgrade}
-              disabled={!betSkin || !targetSkin || isSpinning}
-              className={`
-                px-10 py-3 rounded-lg font-bold text-base transition-all
-                ${
-                  !betSkin || !targetSkin || isSpinning
-                    ? "bg-[#1f2937] text-gray-500 cursor-not-allowed border border-[#374151]"
-                    : "bg-gradient-to-r from-orange-500 to-yellow-500 text-black hover:from-orange-400 hover:to-yellow-400 shadow-lg shadow-orange-500/20 hover:shadow-orange-500/30 active:scale-95"
-                }
-              `}
-            >
-              {isSpinning ? (
-                <span className="flex items-center gap-2">
-                  <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                  </svg>
-                  Spinning...
-                </span>
-              ) : (
-                "UPGRADE"
-              )}
-            </button>
-          )}
         </div>
       </div>
 
